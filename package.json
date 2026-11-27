@@ -1,0 +1,17 @@
+{
+  "name": "ezwrite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EzWrite — Speak Naturally. Type Instantly. Round 2 browser prototype.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:dashboard": "npm --workspace=apps/dashboard run dev",
+    "build:dashboard": "npm --workspace=apps/dashboard run build",
+    "preview:dashboard": "npm --workspace=apps/dashboard run preview",
+    "build:extension": "npm --workspace=apps/extension run build",
+    "build": "npm run build:dashboard && npm run build:extension"
+  }
+}

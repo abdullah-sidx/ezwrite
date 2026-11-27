@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EzWrite</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup-header">
+        <h1 id="app-name">EzWrite</h1>
+        <p id="app-tagline" class="tagline"></p>
+      </header>
+
+      <section class="status-card">
+        <span id="stage-badge" class="badge"></span>
+        <p class="note">
+          Extension foundation is loaded. Voice Typing, Smart Writing, and page field insertion
+          will be added in upcoming steps.
+        </p>
+      </section>
+
+      <footer class="popup-footer">
+        <a href="http://localhost:5173" target="_blank" rel="noreferrer">Open Dashboard</a>
+      </footer>
+    </main>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

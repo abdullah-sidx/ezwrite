@@ -1,0 +1,15 @@
+{
+  "name": "@ezwrite/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@ezwrite/core": "*"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}

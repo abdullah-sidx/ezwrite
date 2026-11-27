@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "EzWrite",
+  "version": "0.1.0",
+  "description": "Speak Naturally. Type Instantly. Round 2 browser prototype.",
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "EzWrite",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

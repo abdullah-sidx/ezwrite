@@ -1,0 +1,9 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    container_name: ezwrite-dashboard
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
