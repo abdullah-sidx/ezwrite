@@ -2,7 +2,7 @@
 
 EzWrite is a voice-first writing assistant prototype designed to help people turn spoken thoughts and plain-language instructions into clear, editable text.
 
-> **Current Build Status:** Step 2 — Core Dashboard UI & Navigation. The React dashboard provides responsive, accessible screens for Dashboard, Voice Typing, Smart Writing, and Settings with honest placeholder states. Conservative text cleanup, local Smart Writing templates, browser speech recognition, and Chrome webpage insertion will be wired in upcoming steps.
+> **Current Build Status:** Step 3 — Conservative Text Cleanup Engine. Pure-JavaScript rule-based cleanup (`cleanText`, `cleanTextWithMeta`) is implemented in `@ezwrite/core`, covered by unit tests, and connected to the Voice Typing fallback editor. Local Smart Writing templates, browser speech recognition, and Chrome webpage insertion will be wired in upcoming steps.
 
 ---
 
@@ -27,8 +27,10 @@ ezwrite/
 ├── apps/
 │   ├── dashboard/          # React + Vite web dashboard (UI & navigation)
 │   └── extension/          # Chrome Extension (Manifest V3 foundation)
-└── packages/
-    └── core/               # Shared pure-JavaScript metadata and constants
+├── packages/
+│   └── core/               # Shared pure-JS modules (metadata & text cleanup)
+└── tests/
+    └── core/               # Node test suite for @ezwrite/core
 ```
 
 ---
@@ -74,6 +76,16 @@ Then open **http://localhost:5173** in your browser.
 
 ---
 
+## Running Tests
+
+Run the core unit test suite (uses Node's built-in test runner):
+
+```powershell
+npm test
+```
+
+---
+
 ## Building and Loading the Chrome Extension
 
 Chrome extensions are loaded directly in Chrome rather than inside Docker.
@@ -100,9 +112,10 @@ Additional permissions will only be added and documented as webpage insertion fe
 
 ---
 
-## Known Limitations (Step 2)
+## Known Limitations (Step 3)
 
-- Speech-to-text (`SpeechRecognition`), conservative text cleanup rules, local Smart Writing draft generation, and webpage text insertion are not wired yet; the UI displays explicit placeholder states for those upcoming steps.
+- **Text cleanup is rule-based and conservative:** It normalizes whitespace, applies safe sentence capitalization, and adds clear basic punctuation while preserving URLs, emails, decimals, abbreviations, and code-mixed (Hinglish/regional) words. It is not full AI grammar correction.
+- Speech-to-text (`SpeechRecognition`), local Smart Writing draft generation, and webpage text insertion are not wired yet.
 - Copy to Clipboard works on text typed/edited in the Voice Typing or Smart Writing preview editors.
 - Browser extensions cannot provide OS-wide shortcuts or insert text into native desktop apps.
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SUPPORTED_LANGUAGES } from '@ezwrite/core';
+import { cleanTextWithMeta, SUPPORTED_LANGUAGES } from '@ezwrite/core';
 import ActionBar from '../components/ActionBar.jsx';
 import { MicIcon } from '../components/Icons.jsx';
 import StatusBanner from '../components/StatusBanner.jsx';
@@ -8,20 +8,26 @@ export default function VoiceTypingPage({ settings, onUpdateSettings }) {
   const [rawText, setRawText] = useState('');
   const [editedText, setEditedText] = useState('');
   const [micNotice, setMicNotice] = useState(
-    'Idle — Browser SpeechRecognition will be wired in Step 7. You can test the editable draft area by typing below.'
+    'Idle — Browser SpeechRecognition will be wired in Step 7. Type or paste text below to test conservative cleanup.'
   );
 
   function handlePreviewMic() {
     setMicNotice(
-      'Speech capture is not connected yet (planned for Step 7). Use the raw text field below to preview the editing layout.'
+      'Speech capture is not connected yet (planned for Step 7). Use the typed/pasted input below to test text cleanup.'
     );
   }
 
-  function handleTransferToEditor() {
+  function handleCleanAndTransfer() {
     if (!rawText.trim()) return;
-    setEditedText(rawText);
+    const result = cleanTextWithMeta(rawText, {
+      autoCapitalize: settings.autoCapitalize,
+      conservativePunctuation: settings.conservativePunctuation,
+    });
+    setEditedText(result.text);
     setMicNotice(
-      'Copied raw text into the editable result box without altering it. Conservative cleanup rules will be added in Step 3.'
+      result.changed
+        ? 'Applied conservative capitalization, spacing, and punctuation cleanup. Review or edit before copying.'
+        : 'Text moved to editor; no cleanup changes were needed.'
     );
   }
 
@@ -35,9 +41,9 @@ export default function VoiceTypingPage({ settings, onUpdateSettings }) {
 
   return (
     <div className="stack">
-      <StatusBanner tone="warning" title="UI Preview — Speech & Cleanup Pending">
-        Microphone speech capture (Step 7), conservative text cleanup rules (Step 3), and active
-        webpage field insertion (Steps 5–6) are not wired yet. No fake transcription is simulated.
+      <StatusBanner tone="info" title="Text Cleanup Active • Speech Capture Pending">
+        Conservative text cleanup (Step 3) is active on the typed/pasted input below. Microphone
+        speech capture (Step 7) and webpage field insertion (Steps 5–6) are still pending.
       </StatusBanner>
 
       <section className="panel" aria-label="Microphone controls and language">
@@ -84,7 +90,7 @@ export default function VoiceTypingPage({ settings, onUpdateSettings }) {
             id="raw-speech-input"
             className="text-area"
             rows={7}
-            placeholder="When Step 7 is wired, spoken text appears here. You can also type or paste raw text right now as a fallback..."
+            placeholder="Type or paste raw text here (e.g., hello how are you) and click Clean & Move to Result..."
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
           />
@@ -92,10 +98,10 @@ export default function VoiceTypingPage({ settings, onUpdateSettings }) {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={handleTransferToEditor}
+              onClick={handleCleanAndTransfer}
               disabled={!rawText.trim()}
             >
-              Move to Editable Result →
+              Clean & Move to Result →
             </button>
             <button
               type="button"
@@ -122,7 +128,7 @@ export default function VoiceTypingPage({ settings, onUpdateSettings }) {
             id="cleaned-result-input"
             className="text-area"
             rows={7}
-            placeholder="Your editable text appears here. You always review and approve text before copying or inserting."
+            placeholder="Your cleaned, editable text appears here. You always review and approve text before copying or inserting."
             value={editedText}
             onChange={(e) => setEditedText(e.target.value)}
           />
