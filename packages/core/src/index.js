@@ -5,18 +5,29 @@
  */
 
 export { cleanText, cleanTextWithMeta } from './cleanup/index.js';
+export {
+  classifySmartWritingIntent,
+  createOpenAiCompatibleProvider,
+  DRAFT_SOURCES,
+  generateLocalDraft,
+  generateSmartDraft,
+  normalizeSmartWritingRequest,
+  SMART_WRITING_LENGTHS,
+  SMART_WRITING_MODES,
+  SMART_WRITING_TONES,
+} from './smart-writing/index.js';
 
 export const APP_INFO = Object.freeze({
   name: 'EzWrite',
   tagline: 'Speak Naturally. Type Instantly.',
-  prototypeStage: 'Step 3 — Conservative Text Cleanup',
+  prototypeStage: 'Step 4 — Smart Writing Engine',
   scopeLabel: 'Round 2 Browser Prototype (Chrome + Companion Dashboard)',
 });
 
 export const NAV_ITEMS = Object.freeze([
   { id: 'dashboard', label: 'Dashboard', description: 'Overview & prototype status' },
   { id: 'voice-typing', label: 'Voice Typing', description: 'Text cleanup & voice UI' },
-  { id: 'smart-writing', label: 'Smart Writing', description: 'Instruction-to-draft UI' },
+  { id: 'smart-writing', label: 'Smart Writing', description: 'Instruction-to-draft engine' },
   { id: 'settings', label: 'Settings', description: 'Preferences, privacy & limits' },
 ]);
 
@@ -31,9 +42,9 @@ export const WRITING_MODES = Object.freeze([
   {
     id: 'smart-writing',
     title: 'Smart Writing',
-    status: 'UI Ready • Templates Pending',
+    status: 'Local Engine Active',
     summary:
-      'Describe what you want to write in plain words and generate an editable message or email draft without requiring an API key.',
+      'Describe what you want to write in plain words and generate an editable email or message draft locally without requiring an API key.',
   },
 ]);
 

@@ -1,9 +1,29 @@
-import { useState } from 'react';
-import { DEFAULT_SETTINGS, SUPPORTED_LANGUAGES } from '@ezwrite/core';
+import { useEffect, useState } from 'react';
+import { SUPPORTED_LANGUAGES } from '@ezwrite/core';
 import StatusBanner from '../components/StatusBanner.jsx';
+import { fetchServerAiStatus } from '../services/smartWritingClient.js';
 
 export default function SettingsPage({ settings, onUpdateSettings, onResetSettings }) {
   const [resetMessage, setResetMessage] = useState('');
+  const [serverStatus, setServerStatus] = useState({
+    checked: false,
+    serverAvailable: false,
+    aiConfigured: false,
+    provider: 'local-fallback',
+    model: null,
+  });
+
+  useEffect(() => {
+    let active = true;
+    fetchServerAiStatus().then((status) => {
+      if (active) {
+        setServerStatus({ ...status, checked: true });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function handleReset() {
     onResetSettings();
@@ -13,8 +33,8 @@ export default function SettingsPage({ settings, onUpdateSettings, onResetSettin
   return (
     <div className="stack">
       <StatusBanner tone="info" title="Prototype Preferences (Session State)">
-        Changes here update the dashboard UI immediately. Persistent browser/extension storage will
-        be connected when Chrome extension integration is added.
+        Changes here update the dashboard immediately. Persistent browser/extension storage will be
+        connected when Chrome extension integration is added.
       </StatusBanner>
 
       <div className="two-col-grid">
@@ -44,7 +64,7 @@ export default function SettingsPage({ settings, onUpdateSettings, onResetSettin
             />
             <span>
               <strong>Auto-capitalize sentence starts</strong>
-              <small>Conservative rule — preserves names, URLs, and abbreviations (Step 3).</small>
+              <small>Conservative rule — preserves names, URLs, and abbreviations (active).</small>
             </span>
           </label>
 
@@ -56,7 +76,7 @@ export default function SettingsPage({ settings, onUpdateSettings, onResetSettin
             />
             <span>
               <strong>Conservative punctuation cleanup</strong>
-              <small>Applies ending punctuation only when rules are clear (Step 3).</small>
+              <small>Applies ending punctuation only when rules are clear (active).</small>
             </span>
           </label>
         </section>
@@ -65,20 +85,23 @@ export default function SettingsPage({ settings, onUpdateSettings, onResetSettin
           <h3>Smart Writing & Shortcuts</h3>
 
           <div className="form-field">
-            <label htmlFor="settings-provider">Smart Writing Engine</label>
+            <label htmlFor="settings-provider">Smart Writing Mode</label>
             <select
               id="settings-provider"
               value={settings.aiProvider}
               onChange={(e) => onUpdateSettings({ aiProvider: e.target.value })}
-              disabled
             >
-              <option value={DEFAULT_SETTINGS.aiProvider}>
-                Local Template Fallback (No API Key Required)
+              <option value="local-fallback">Local Template Fallback (No API Key Required)</option>
+              <option value="server-ai">
+                Optional Server-Side AI Provider (Falls Back Locally if Unconfigured)
               </option>
             </select>
             <p className="helper-text">
-              Optional external AI providers will remain optional and disabled unless explicitly
-              configured later.
+              {serverStatus.checked
+                ? serverStatus.aiConfigured
+                  ? `Server AI endpoint detected (${serverStatus.model || 'configured'}). API keys stay on the server only.`
+                  : 'No server AI key configured — Smart Writing runs 100% locally. Keys are never entered or stored in browser JS.'
+                : 'Checking optional server AI status...'}
             </p>
           </div>
 
@@ -102,6 +125,10 @@ export default function SettingsPage({ settings, onUpdateSettings, onResetSettin
         <ul className="check-list">
           <li>EzWrite never stores raw audio recordings by default.</li>
           <li>EzWrite never auto-sends, auto-submits, or publishes your text.</li>
+          <li>
+            API keys are never accepted in frontend forms, browser storage, or extension code;
+            optional AI configuration lives strictly in server-side environment variables.
+          </li>
           <li>
             Browser <code>SpeechRecognition</code> (when enabled in Step 7) depends on Chrome and
             may use a browser-managed speech service rather than offline recognition.

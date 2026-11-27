@@ -1,19 +1,25 @@
 import { useState } from 'react';
 import { CopyIcon } from './Icons.jsx';
 
-export default function ActionBar({ text, copyLabel = 'Copy Text' }) {
+export default function ActionBar({
+  text,
+  copyLabel = 'Copy Text',
+  secondaryText = '',
+  secondaryLabel = '',
+}) {
   const [feedback, setFeedback] = useState('');
   const hasText = text.trim().length > 0;
+  const hasSecondary = Boolean(secondaryLabel) && secondaryText.trim().length > 0;
 
-  async function handleCopy() {
-    if (!hasText) return;
+  async function copyValue(value, label) {
+    if (!value.trim()) return;
     try {
       if (!navigator.clipboard?.writeText) {
         setFeedback('Clipboard API unavailable here. Select the text above and press Ctrl+C.');
         return;
       }
-      await navigator.clipboard.writeText(text);
-      setFeedback('Copied to clipboard. Nothing was sent automatically.');
+      await navigator.clipboard.writeText(value);
+      setFeedback(`${label} copied to clipboard. Nothing was sent automatically.`);
     } catch {
       setFeedback('Could not access clipboard. Select the text above and press Ctrl+C.');
     }
@@ -25,12 +31,24 @@ export default function ActionBar({ text, copyLabel = 'Copy Text' }) {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={handleCopy}
+          onClick={() => copyValue(text, copyLabel)}
           disabled={!hasText}
         >
           <CopyIcon />
           <span>{copyLabel}</span>
         </button>
+
+        {secondaryLabel ? (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => copyValue(secondaryText, secondaryLabel)}
+            disabled={!hasSecondary}
+          >
+            <CopyIcon />
+            <span>{secondaryLabel}</span>
+          </button>
+        ) : null}
 
         <button
           type="button"

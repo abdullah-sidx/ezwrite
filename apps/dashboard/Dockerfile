@@ -17,4 +17,4 @@ RUN npm run build:dashboard
 
 EXPOSE 5173
 
-CMD ["npm", "--workspace=apps/dashboard", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5173"]
+CMD ["node", "apps/dashboard/server.mjs"]

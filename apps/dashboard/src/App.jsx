@@ -67,7 +67,7 @@ export default function App() {
           {activeView === 'voice-typing' ? (
             <VoiceTypingPage settings={settings} onUpdateSettings={updateSettings} />
           ) : null}
-          {activeView === 'smart-writing' ? <SmartWritingPage /> : null}
+          {activeView === 'smart-writing' ? <SmartWritingPage settings={settings} /> : null}
           {activeView === 'settings' ? (
             <SettingsPage
               settings={settings}

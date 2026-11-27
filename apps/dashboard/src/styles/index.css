@@ -503,6 +503,29 @@ select,
   color: var(--text-muted);
 }
 
+.error-line {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 9px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.btn-compact {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

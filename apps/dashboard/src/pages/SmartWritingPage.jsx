@@ -1,78 +1,175 @@
 import { useState } from 'react';
+import {
+  DRAFT_SOURCES,
+  SMART_WRITING_LENGTHS,
+  SMART_WRITING_MODES,
+  SMART_WRITING_TONES,
+} from '@ezwrite/core';
 import ActionBar from '../components/ActionBar.jsx';
-import { SparklesIcon } from '../components/Icons.jsx';
+import { CopyIcon, SparklesIcon } from '../components/Icons.jsx';
 import StatusBanner from '../components/StatusBanner.jsx';
+import { requestSmartDraft } from '../services/smartWritingClient.js';
 
 const EXAMPLE_PROMPTS = [
   {
+    label: 'Assignment Extension',
+    prompt:
+      'Write an email to my professor asking for two extra days to submit my assignment because I was sick.',
+    recipient: 'Professor',
+    purpose: 'Assignment Submission Extension',
+    mode: 'professional-email',
+    tone: 'polite',
+    length: 'medium',
+  },
+  {
     label: 'Leave Request',
     prompt:
-      'Write a polite email to my manager asking for leave from Monday to Wednesday due to an urgent personal matter.',
+      'Write a polite email to my manager asking for leave from Monday to Wednesday because I have an urgent personal matter.',
     recipient: 'Manager',
-    purpose: 'Leave request',
-    tone: 'polite-professional',
+    purpose: 'Leave Request',
+    mode: 'request',
+    tone: 'polite',
     length: 'short',
   },
   {
-    label: 'Polite Follow-Up',
+    label: 'Apology Message',
     prompt:
-      'Write a friendly follow-up message asking for an update on the project notes shared earlier this week.',
-    recipient: 'Teammate',
-    purpose: 'Follow-up',
+      'Say sorry to Riya for missing today’s 4:00 PM call because my internet connection went down.',
+    recipient: 'Riya',
+    purpose: 'Apology for Missed Call',
+    mode: 'apology',
     tone: 'friendly',
     length: 'short',
   },
   {
-    label: 'Meeting Request',
+    label: 'Follow-up',
     prompt:
-      'Draft a concise message requesting a 20-minute review call tomorrow at 4:00 PM to finalize the demo script.',
-    recipient: 'Team / Mentor',
-    purpose: 'Meeting scheduling',
-    tone: 'concise',
-    length: 'short',
+      'Follow up with the HR team about my interview status from last Tuesday.',
+    recipient: 'HR Team',
+    purpose: 'Interview Status Follow-Up',
+    mode: 'follow-up',
+    tone: 'professional',
+    length: 'medium',
   },
 ];
 
-export default function SmartWritingPage() {
+export default function SmartWritingPage({ settings }) {
   const [prompt, setPrompt] = useState('');
+  const [mode, setMode] = useState('professional-email');
+  const [tone, setTone] = useState('polite');
+  const [length, setLength] = useState('medium');
   const [recipient, setRecipient] = useState('');
   const [purpose, setPurpose] = useState('');
-  const [tone, setTone] = useState('polite-professional');
-  const [length, setLength] = useState('short');
+
   const [subject, setSubject] = useState('');
   const [draftBody, setDraftBody] = useState('');
-  const [generationNotice, setGenerationNotice] = useState('');
+  const [variant, setVariant] = useState(0);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [statusMeta, setStatusMeta] = useState(null);
+  const [subjectCopied, setSubjectCopied] = useState('');
 
   function applyExample(example) {
     setPrompt(example.prompt);
     setRecipient(example.recipient);
     setPurpose(example.purpose);
+    setMode(example.mode);
     setTone(example.tone);
     setLength(example.length);
-    setGenerationNotice(`Loaded "${example.label}" example prompt. Click Generate Draft when Step 4 templates are wired, or edit the draft area directly.`);
+    setErrorMessage('');
+    setSubjectCopied('');
   }
 
-  function handlePreviewGenerate(event) {
+  async function runGeneration(nextVariant) {
+    setErrorMessage('');
+    setSubjectCopied('');
+    setIsLoading(true);
+
+    try {
+      const preferLocal = settings?.aiProvider !== 'server-ai';
+      const result = await requestSmartDraft(
+        {
+          instructions: prompt,
+          mode,
+          tone,
+          length,
+          recipient,
+          purpose,
+          variant: nextVariant,
+        },
+        { preferLocal }
+      );
+
+      setSubject(result.subject);
+      setDraftBody(result.body);
+      setVariant(nextVariant);
+      setHasGenerated(true);
+      setStatusMeta({
+        source: result.source,
+        providerName: result.providerName,
+        usedFallback: result.usedFallback,
+        fallbackReason: result.fallbackReason,
+        warnings: result.warnings || [],
+      });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Unable to generate a draft from the current instructions.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleSubmit(event) {
     event.preventDefault();
-    setGenerationNotice(
-      'Local Smart Writing template generation will be implemented in Step 4 (without requiring any API key). No placeholder draft was invented.'
-    );
+    runGeneration(0);
+  }
+
+  function handleRegenerate() {
+    runGeneration(variant + 1);
+  }
+
+  async function handleCopySubject() {
+    if (!subject.trim()) return;
+    try {
+      await navigator.clipboard.writeText(subject);
+      setSubjectCopied('Subject copied.');
+    } catch {
+      setSubjectCopied('Select subject and press Ctrl+C.');
+    }
   }
 
   const combinedDraft = subject.trim() ? `Subject: ${subject.trim()}\n\n${draftBody}` : draftBody;
 
+  const sourceBadgeLabel = statusMeta
+    ? statusMeta.source === DRAFT_SOURCES.AI_PROVIDER
+      ? `AI Provider (${statusMeta.providerName})`
+      : 'Local Template Fallback (No API Key)'
+    : 'Local Template Ready (No API Key)';
+
   return (
     <div className="stack">
-      <StatusBanner tone="warning" title="UI Preview — Local Draft Generator Pending">
-        Smart Writing template generation (Step 4) is not wired yet. EzWrite will use a dependable
-        local fallback that works with zero API keys and never invents missing dates or names.
+      <StatusBanner
+        tone={statusMeta?.usedFallback ? 'warning' : 'info'}
+        title={
+          statusMeta?.usedFallback
+            ? 'Fell Back to Local Template Generator'
+            : 'Smart Writing Active — Works Offline Without API Keys'
+        }
+      >
+        {statusMeta?.usedFallback
+          ? `${statusMeta.fallbackReason} Generated a structured draft locally instead without inventing missing facts.`
+          : 'Describe what you want to write in ordinary language. Local templates generate an editable draft without an API key, and never invent missing names or dates.'}
       </StatusBanner>
 
       <div className="two-col-grid">
-        <form className="panel" onSubmit={handlePreviewGenerate}>
+        <form className="panel" onSubmit={handleSubmit}>
           <div className="panel-header">
             <h3>1. Describe What You Need</h3>
-            <span className="pill pill-blue">Local Fallback Mode</span>
+            <span className="pill pill-blue">{sourceBadgeLabel}</span>
           </div>
 
           <div className="chip-row" aria-label="Example prompts">
@@ -94,7 +191,7 @@ export default function SmartWritingPage() {
               id="smart-prompt"
               className="text-area"
               rows={5}
-              placeholder="Example: Write a polite email to my manager asking for leave from Monday to Wednesday because of an urgent personal matter."
+              placeholder="Example: Write an email to my professor asking for two extra days to submit my assignment because I was sick."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
@@ -102,55 +199,80 @@ export default function SmartWritingPage() {
 
           <div className="form-grid">
             <div className="form-field">
-              <label htmlFor="smart-recipient">Recipient (optional)</label>
-              <input
-                id="smart-recipient"
-                type="text"
-                placeholder="e.g., Manager, Client, Professor"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="smart-purpose">Purpose (optional)</label>
-              <input
-                id="smart-purpose"
-                type="text"
-                placeholder="e.g., Leave request, Follow-up"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-              />
+              <label htmlFor="smart-mode">Writing Mode</label>
+              <select id="smart-mode" value={mode} onChange={(e) => setMode(e.target.value)}>
+                {SMART_WRITING_MODES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-field">
               <label htmlFor="smart-tone">Tone</label>
               <select id="smart-tone" value={tone} onChange={(e) => setTone(e.target.value)}>
-                <option value="polite-professional">Polite & Professional</option>
-                <option value="friendly">Friendly</option>
-                <option value="concise">Concise & Direct</option>
+                {SMART_WRITING_TONES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="form-field">
               <label htmlFor="smart-length">Length</label>
               <select id="smart-length" value={length} onChange={(e) => setLength(e.target.value)}>
-                <option value="short">Short</option>
-                <option value="medium">Medium</option>
+                {SMART_WRITING_LENGTHS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
               </select>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="smart-recipient">Recipient (optional)</label>
+              <input
+                id="smart-recipient"
+                type="text"
+                placeholder="e.g., Professor, Manager, Riya"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+              />
             </div>
           </div>
 
+          <div className="form-field">
+            <label htmlFor="smart-purpose">Subject Hint / Purpose (optional)</label>
+            <input
+              id="smart-purpose"
+              type="text"
+              placeholder="e.g., Assignment Submission Extension, Leave Request"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+            />
+          </div>
+
           <div className="panel-actions">
-            <button type="submit" className="btn btn-primary" disabled={!prompt.trim()}>
+            <button type="submit" className="btn btn-primary" disabled={isLoading}>
               <SparklesIcon />
-              <span>Generate Draft (Step 4)</span>
+              <span>{isLoading ? 'Generating Draft...' : 'Generate Draft'}</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleRegenerate}
+              disabled={isLoading || !hasGenerated || !prompt.trim()}
+            >
+              Regenerate Draft
             </button>
           </div>
 
-          {generationNotice ? (
-            <p className="status-line" role="status" aria-live="polite">
-              {generationNotice}
+          {errorMessage ? (
+            <p className="error-line" role="alert">
+              {errorMessage}
             </p>
           ) : null}
         </form>
@@ -158,11 +280,22 @@ export default function SmartWritingPage() {
         <section className="panel" aria-label="Editable draft preview">
           <div className="panel-header">
             <h3>2. Editable Draft Preview</h3>
-            <span className="pill pill-neutral">User Controlled</span>
+            <span className="pill pill-neutral">User Controlled • Never Auto-Sent</span>
           </div>
 
           <div className="form-field">
-            <label htmlFor="draft-subject">Subject (optional for emails)</label>
+            <div className="label-row">
+              <label htmlFor="draft-subject">Subject (for emails & formal notes)</label>
+              <button
+                type="button"
+                className="btn btn-ghost btn-compact"
+                onClick={handleCopySubject}
+                disabled={!subject.trim()}
+              >
+                <CopyIcon />
+                <span>Copy Subject</span>
+              </button>
+            </div>
             <input
               id="draft-subject"
               type="text"
@@ -170,6 +303,11 @@ export default function SmartWritingPage() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
             />
+            {subjectCopied ? (
+              <span className="helper-text" role="status" aria-live="polite">
+                {subjectCopied}
+              </span>
+            ) : null}
           </div>
 
           <div className="form-field">
@@ -177,14 +315,30 @@ export default function SmartWritingPage() {
             <textarea
               id="draft-body"
               className="text-area"
-              rows={8}
-              placeholder="Generated draft will appear here for review and editing. You can also type or edit text manually right now."
+              rows={9}
+              placeholder="Your generated draft appears here so you can review and edit every word before copying or inserting."
               value={draftBody}
               onChange={(e) => setDraftBody(e.target.value)}
             />
           </div>
 
-          <ActionBar text={combinedDraft} copyLabel="Copy Draft" />
+          {statusMeta?.warnings?.length ? (
+            <div className="info-box" role="status" aria-live="polite">
+              <strong>Review Placeholders Before Sending</strong>
+              <ul className="check-list">
+                {statusMeta.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <ActionBar
+            text={combinedDraft}
+            copyLabel="Copy Full Draft"
+            secondaryText={draftBody}
+            secondaryLabel="Copy Body"
+          />
         </section>
       </div>
     </div>

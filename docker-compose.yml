@@ -6,4 +6,10 @@ services:
     container_name: ezwrite-dashboard
     ports:
       - "5173:5173"
+    environment:
+      - PORT=5173
+      - EZWRITE_AI_PROVIDER=${EZWRITE_AI_PROVIDER:-none}
+      - EZWRITE_AI_API_KEY=${EZWRITE_AI_API_KEY:-}
+      - EZWRITE_AI_BASE_URL=${EZWRITE_AI_BASE_URL:-https://api.openai.com/v1}
+      - EZWRITE_AI_MODEL=${EZWRITE_AI_MODEL:-gpt-4o-mini}
     restart: unless-stopped
