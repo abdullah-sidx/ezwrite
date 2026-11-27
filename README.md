@@ -2,7 +2,7 @@
 
 EzWrite is a voice-first writing assistant prototype designed to help people turn spoken thoughts and plain-language instructions into clear, editable text.
 
-> **Current Build Status:** Step 1 Project Skeleton (React + Vite Dashboard, Chrome Extension Manifest V3 foundation, Shared Core package, and Docker Compose setup). Voice Typing, text cleanup, Smart Writing, and webpage text insertion will be implemented in upcoming steps.
+> **Current Build Status:** Step 2 — Core Dashboard UI & Navigation. The React dashboard provides responsive, accessible screens for Dashboard, Voice Typing, Smart Writing, and Settings with honest placeholder states. Conservative text cleanup, local Smart Writing templates, browser speech recognition, and Chrome webpage insertion will be wired in upcoming steps.
 
 ---
 
@@ -25,10 +25,10 @@ ezwrite/
 ├── package.json
 ├── EzWrite_Project_Reference_and_Master_Prompt.md
 ├── apps/
-│   ├── dashboard/          # React + Vite web dashboard
-│   └── extension/          # Chrome Extension (Manifest V3)
+│   ├── dashboard/          # React + Vite web dashboard (UI & navigation)
+│   └── extension/          # Chrome Extension (Manifest V3 foundation)
 └── packages/
-    └── core/               # Shared pure-JavaScript modules
+    └── core/               # Shared pure-JavaScript metadata and constants
 ```
 
 ---
@@ -100,9 +100,10 @@ Additional permissions will only be added and documented as webpage insertion fe
 
 ---
 
-## Known Limitations (Step 1)
+## Known Limitations (Step 2)
 
-- Voice Typing, conservative text cleanup, Smart Writing draft generation, and webpage text insertion are not implemented yet; the dashboard and extension popup currently show the Step 1 foundation shell.
+- Speech-to-text (`SpeechRecognition`), conservative text cleanup rules, local Smart Writing draft generation, and webpage text insertion are not wired yet; the UI displays explicit placeholder states for those upcoming steps.
+- Copy to Clipboard works on text typed/edited in the Voice Typing or Smart Writing preview editors.
 - Browser extensions cannot provide OS-wide shortcuts or insert text into native desktop apps.
 
 ---
